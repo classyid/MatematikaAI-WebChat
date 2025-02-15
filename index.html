@@ -1,0 +1,346 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asisten Guru Matematika AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Modern color scheme */
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #4f46e5;
+            --accent-color: #818cf8;
+            --background-color: #f8fafc;
+            --text-color: #1e293b;
+        }
+
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 4px;
+        }
+
+        /* Message animations */
+        .message-appear {
+            animation: messageAppear 0.5s ease forwards;
+        }
+
+        @keyframes messageAppear {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Typing indicator animation */
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 8px 16px;
+            background: #e0e7ff;
+            border-radius: 12px;
+            width: fit-content;
+        }
+
+        .typing-circle {
+            width: 8px;
+            height: 8px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            animation: typing 1s infinite;
+        }
+
+        .typing-circle:nth-child(2) { animation-delay: 0.2s; }
+        .typing-circle:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Glass morphism effects */
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Gradient backgrounds */
+        .gradient-bg {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-50 to-purple-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-indigo-900 mb-2 tracking-tight">
+                📚 Asisten Guru Matematika AI
+            </h1>
+            <p class="text-indigo-600">Belajar matematika jadi lebih menyenangkan dan interaktif</p>
+        </div>
+        
+        <!-- Chat Container -->
+        <div class="glass rounded-2xl shadow-xl p-6 mb-4">
+            <div id="chat-container" class="h-[32rem] overflow-y-auto mb-6 space-y-4 p-4">
+                <div class="message-appear bg-indigo-100 p-4 rounded-xl shadow-sm">
+                    <p class="text-indigo-900">
+                        👨‍🏫 Guru: Selamat datang di Asisten Belajar Matematika! 
+                        Saya siap membantu kamu belajar matematika. Silakan ajukan pertanyaan tentang topik matematika apapun.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Input Area -->
+            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                <div class="flex-1 relative">
+                    <input type="text" id="user-input" 
+                           class="w-full p-4 pr-12 border-2 border-indigo-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent shadow-sm transition-all duration-200"
+                           placeholder="Ketik pertanyaan matematika Anda..."
+                           disabled>
+                    <div id="input-status" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></div>
+                </div>
+                <div class="flex space-x-2">
+                    <button id="send-button" 
+                            class="flex-1 sm:flex-none gradient-bg text-white px-6 py-4 rounded-xl hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg transition-all duration-200 disabled:opacity-50"
+                            disabled>
+                        <span class="flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                            </svg>
+                            Kirim
+                        </span>
+                    </button>
+                    <button onclick="clearChat()" 
+                            class="flex-1 sm:flex-none bg-gray-500 text-white px-6 py-4 rounded-xl hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 shadow-lg transition-all duration-200">
+                        Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tips Section -->
+        <div class="text-center mt-4 text-indigo-600 text-sm">
+            <p>💡 Tips: Ketik 'clear' atau klik tombol Clear untuk membersihkan riwayat chat</p>
+        </div>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const inputStatus = document.getElementById('input-status');
+        let isProcessing = false;
+
+        // Enable input and button on page load
+        window.addEventListener('DOMContentLoaded', (event) => {
+            userInput.disabled = false;
+            sendButton.disabled = false;
+        });
+
+        // Load chat history on page load
+        window.addEventListener('load', async () => {
+            try {
+               const response = await fetch('/get_chat_history');
+                const chatHistory = await response.json();
+                
+                // Clear existing messages except welcome message
+                while (chatContainer.children.length > 1) {
+                    chatContainer.removeChild(chatContainer.lastChild);
+                }
+                
+                // Add history messages
+                chatHistory.forEach(msg => {
+                    addMessage(msg.content, msg.role === 'user');
+                });
+                
+                // Scroll to bottom
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            } catch (error) {
+                console.error('Error loading chat history:', error);
+            }
+        });
+
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !isProcessing && userInput.value.trim()) {
+                sendMessage();
+            }
+        });
+
+        function addMessage(content, isUser = false) {
+            const div = document.createElement('div');
+            div.className = `message-appear ${isUser ? 'bg-white' : 'bg-indigo-100'} p-4 rounded-xl shadow-sm`;
+            
+            // Add emoji and role based on who's speaking
+            const roleEmoji = isUser ? '👨‍🎓 Siswa: ' : '👨‍🏫 Guru: ';
+            
+            div.innerHTML = `
+                <p class="text-indigo-900">
+                    ${roleEmoji}${content}
+                </p>
+            `;
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function addTypingIndicator() {
+            const div = document.createElement('div');
+            div.id = 'typing-indicator';
+            div.className = 'message-appear typing-indicator';
+            div.innerHTML = `
+                <div class="typing-circle"></div>
+                <div class="typing-circle"></div>
+                <div class="typing-circle"></div>
+            `;
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        async function sendMessage() {
+            if (isProcessing) return;
+            
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            // Disable input and button while processing
+            isProcessing = true;
+            userInput.disabled = true;
+            sendButton.disabled = true;
+            inputStatus.innerHTML = '⏳';
+
+            addMessage(message, true);
+            userInput.value = '';
+            
+            // Show typing indicator
+            addTypingIndicator();
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+                
+                // Remove typing indicator before adding response
+                removeTypingIndicator();
+                
+                if (data.error) {
+                    addMessage('Maaf, terjadi kesalahan: ' + data.error);
+                } else {
+                    addMessage(data.response);
+                }
+            } catch (error) {
+                removeTypingIndicator();
+                addMessage('Maaf, terjadi kesalahan dalam komunikasi dengan server.');
+            } finally {
+                // Re-enable input and button
+                isProcessing = false;
+                userInput.disabled = false;
+                sendButton.disabled = false;
+                inputStatus.innerHTML = '';
+                userInput.focus();
+            }
+        }
+
+        async function clearChat() {
+            if (isProcessing) return;
+            
+            try {
+                isProcessing = true;
+                userInput.disabled = true;
+                sendButton.disabled = true;
+
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: 'clear' })
+                });
+                
+                const data = await response.json();
+                
+                chatContainer.innerHTML = `
+                    <div class="message-appear bg-indigo-100 p-4 rounded-xl shadow-sm">
+                        <p class="text-indigo-900">
+                            👨‍🏫 Guru: Selamat datang di Asisten Belajar Matematika! 
+                            Saya siap membantu kamu belajar matematika.
+                        </p>
+                    </div>
+                `;
+            } catch (error) {
+                addMessage('Maaf, terjadi kesalahan dalam membersihkan chat.');
+            } finally {
+                isProcessing = false;
+                userInput.disabled = false;
+                sendButton.disabled = false;
+                userInput.focus();
+            }
+        }
+
+        // Health check periodik
+        async function checkHealth() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                if (data.llm_status !== 'initialized') {
+                    addMessage('⚠️ Peringatan: Sistem sedang mengalami masalah. Mohon tunggu sebentar.');
+                    userInput.disabled = true;
+                    sendButton.disabled = true;
+                } else {
+                    userInput.disabled = false;
+                    sendButton.disabled = false;
+                }
+            } catch (error) {
+                console.error('Health check failed:', error);
+            }
+        }
+
+        // Click handler for send button
+        sendButton.addEventListener('click', () => {
+            if (!isProcessing && userInput.value.trim()) {
+                sendMessage();
+            }
+        });
+
+        // Jalankan health check setiap 30 detik
+        setInterval(checkHealth, 30000);
+        
+        // Initial health check
+        checkHealth();
+    </script>
+</body>
+</html>
